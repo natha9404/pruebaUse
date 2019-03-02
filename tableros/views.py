@@ -1,16 +1,14 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
 from util.ResponseBuilder import Response_Builder
-from rest_framework import permissions
+from rest_framework import permissions, authentication
 from .models import Tablero, Tarjeta
 from usuarios.models import Usuario
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework.decorators import api_view
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework.permissions import IsAuthenticated
 from datetime import datetime
+from .serializer import *
 import pytz
-
-
-
 
 
 Resp = Response_Builder()
@@ -20,10 +18,8 @@ Resp = Response_Builder()
 
 class CrearTablero(APIView):
 
-    permission_classes = (permissions.AllowAny,)
+    authentication_classes = (SessionAuthentication, BasicAuthentication, authentication.TokenAuthentication,)
 
-    @csrf_exempt
-    @api_view(['GET'])
     def dispatch(self, request, *args, **kwargs):
         return super(CrearTablero, self).dispatch(request, *args, **kwargs)
 
@@ -51,16 +47,10 @@ class CrearTablero(APIView):
 
 
 class CrearTarjeta(APIView):
+    authentication_classes = (SessionAuthentication, BasicAuthentication, authentication.TokenAuthentication,)
 
-    permission_classes = (permissions.AllowAny,)
-
-    @csrf_exempt
-    @api_view(['GET'])
-    def dispatch(self, request, *args, **kwargs):
-        return super(CrearTablero, self).dispatch(request, *args, **kwargs)
-
-    def post(self, request):
-        jsonTarjeta = request.data['CrearTarjeta']
+    def post(self, request, format=None):
+        jsonTarjeta = request.data['crearTarjeta']
 
         try:
             now_utc = datetime.now(pytz.timezone('America/Bogota')).replace(microsecond=0)
@@ -72,23 +62,90 @@ class CrearTarjeta(APIView):
             username = request.user.username
 
             # If para comprobar si el tablero al que se le añadira la tarjeta pertenece al usuario logueado
-            tablero = Tablero.objects.get(id=idTablero)
-            usuario = Usuario.objects.get(username=username)
+            try:
+                print(idTablero)
+                tablero = Tablero.objects.get(id=idTablero)
+                print(tablero)
+                usuario = Usuario.objects.get(username=username)
+            except:
+                return Resp.send_response(_status=503, _msg='El tablero no existe')
+
 
             if tablero.propietario.username == usuario.username:
                 propietario = usuario
 
                 tarjeta = Tarjeta()
                 tarjeta.titulo = titulo
-                tarjeta.idTablero = tablero
+                tarjeta.tablero = tablero
                 tarjeta.contenido = contenido
                 tarjeta.ultimaModificacion = ultimaModificacion
                 tarjeta.save()
-                return Resp.send_response(_status=200, _msg='OK', _data='Tarjeta creado exitosamente')
             else:
                 return Resp.send_response(_status=503, _msg='Usted no posee permisos para añadir '
                                                             'tarjetas en este tablero')
 
+            return Resp.send_response(_status=200, _msg='OK', _data='Tarjeta creado exitosamente')
         except Exception as e:
             print(e)
             return Resp.send_response(_status=503, _msg='La tarjeta no pudo ser creada')
+
+
+class ListarTablerosUsuario(APIView):
+    authentication_classes = (SessionAuthentication, BasicAuthentication, authentication.TokenAuthentication,)
+
+    def get(self, request, format=None):
+        try:
+            username = request.user.username
+            tableros = Tablero.objects.filter(propietario__username=username)
+            serializer = TableroSerializer(tableros, many=True)
+
+            return Resp.send_response(_status=200, _msg='OK', _data=serializer.data)
+        except Exception as e:
+            print(e)
+            return Resp.send_response(_status=503, _msg='No se pueden listar los tableros')
+
+
+class ListarTablerosPublicos(APIView):
+    authentication_classes = (SessionAuthentication, BasicAuthentication, authentication.TokenAuthentication,)
+
+    def get(self, request, format=None):
+        try:
+            tableros = Tablero.objects.filter(estado='Público')
+            serializer = TableroSerializerPublico(tableros, many=True)
+
+            return Resp.send_response(_status=200, _msg='OK', _data=serializer.data)
+        except Exception as e:
+            print(e)
+            return Resp.send_response(_status=503, _msg='No se pueden listar los tableros')
+
+
+class ListarTarjetasTablero(APIView):
+    authentication_classes = (SessionAuthentication, BasicAuthentication, authentication.TokenAuthentication,)
+
+    def post(self, request, format=None):
+        print(2, request.META.get('HTTP_AUTHORIZATION'))
+
+        try:
+            jsonTablero = request.data['listarTarjetas']
+            idTablero = jsonTablero['idTablero']
+            tablero = Tablero.objects.get(id=idTablero)
+            estadoTablero = tablero.estado
+            propietario = tablero.propietario.username
+            usuarioLogueado = request.user.username
+
+            if estadoTablero =='Público':
+                tarjetas = Tarjeta.objects.filter(tablero_id=idTablero)
+            else:
+                if usuarioLogueado == propietario:
+                    tarjetas = Tarjeta.objects.filter(tablero_id=idTablero)
+                else:
+                    return Resp.send_response(_status=503, _msg='El tablero no es público')
+
+            print(tarjetas)
+
+            serializer = TarjetaSerializer(tarjetas, many=True)
+
+            return Resp.send_response(_status=200, _msg='OK', _data=serializer.data)
+        except Exception as e:
+            print(e)
+            return Resp.send_response(_status=503, _msg='No se pueden listar las tarjetas')
