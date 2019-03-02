@@ -22,4 +22,5 @@ urlpatterns = [
     url(r'^api-auth/', include('rest_framework.urls')),
     # modulos
     url(r'^usuarios/', include('usuarios.urls')),
+    url(r'^tableros/', include('tableros.urls')),
 ]

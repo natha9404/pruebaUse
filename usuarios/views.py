@@ -56,26 +56,33 @@ class createUser(APIView):
 
     def post(self, request):
         try:
+
             email = request.data['email']
-            first_name = request.data['first_name']
-            first_lastname = request.data['first_lastname']
-            segundo_nombre = request.data['segundo_nombre']
-            segundo_apellido = request.data['segundo_apellido']
-            password = request.data['password']
 
-            user = Usuario()
-            user.first_name = first_name
-            user.last_name = first_lastname
-            user.segundo_nombre = segundo_nombre
-            user.segundo_apellido = segundo_apellido
-            user.email = email
-            user.username = email
+            if Usuario.objects.filter(email=email).count() > 0:
+                return Resp.send_response(_status=503, _msg='El correo electronico ya se encuentra registrado')
+            else:
+                first_name = request.data['primer_nombre']
+                first_lastname = request.data['primer_apellido']
+                segundo_nombre = request.data['segundo_nombre']
+                segundo_apellido = request.data['segundo_apellido']
+                numero_documento_identificacion = request.data['numero_documento_identificacion']
+                password = request.data['password']
 
-            user.is_active = True
-            user.set_password(password)
-            user.save()
+                user = Usuario()
+                user.first_name = first_name
+                user.last_name = first_lastname
+                user.segundo_nombre = segundo_nombre
+                user.segundo_apellido = segundo_apellido
+                user.email = email
+                user.username = email
+                user.numero_documento_identificacion = numero_documento_identificacion
 
-            return Resp.send_response(_status=200, _msg='OK', _data="Usuario creado exitosamente")
+                user.is_active = True
+                user.set_password(password)
+                user.save()
+
+                return Resp.send_response(_status=200, _msg='OK', _data="Usuario creado exitosamente")
 
         except Exception as e:
             print(3, 'Error, no se puede realizar login ' + str(e))
