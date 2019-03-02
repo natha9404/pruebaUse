@@ -14,7 +14,7 @@ class Tablero(models.Model):
         return self.nombreTablero
 
 
-class Card(models.Model):
+class Tarjeta(models.Model):
     titulo = models.CharField(max_length=100, unique=True)
     contenido = models.TextField()
     ultimaModificacion = models.DateTimeField(auto_now_add=False, default=False, editable=False)
