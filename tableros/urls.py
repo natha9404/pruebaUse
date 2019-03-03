@@ -8,5 +8,6 @@ urlpatterns = [
     path('listarTableroPublicos/', ListarTablerosPublicos.as_view()),
     path('listarTablerosUsuario/', ListarTablerosUsuario.as_view()),
     path('listarTarjetasTablero/', ListarTarjetasTablero.as_view()),
+    path('modificarTarjeta/', ActualizarTarjeta.as_view()),
 
 ]

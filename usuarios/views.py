@@ -89,7 +89,6 @@ class createUser(APIView):
             return Resp.send_response(_status=503, _msg=ErrorMSG.get_msg(5003))
 
 
-
 class logout(APIView):
     permission_classes = (permissions.AllowAny,)
 
