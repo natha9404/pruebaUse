@@ -9,5 +9,6 @@ urlpatterns = [
     path('listarTablerosUsuario/', ListarTablerosUsuario.as_view()),
     path('listarTarjetasTablero/', ListarTarjetasTablero.as_view()),
     path('modificarTarjeta/', ActualizarTarjeta.as_view()),
+    path('listar_solicitudes/', ListarSolicitudes.as_view()),
 
 ]

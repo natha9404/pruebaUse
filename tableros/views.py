@@ -204,3 +204,67 @@ class ActualizarTarjeta(APIView):
         except Exception as e:
             print(e)
             return Resp.send_response(_status=503, _msg='No se puede actualizar la tarjeta')
+
+
+class AceptarSolicitud(APIView):
+    authentication_classes = (SessionAuthentication, BasicAuthentication, authentication.TokenAuthentication,)
+
+    def post(self, request, format=None):
+
+        try:
+            now_utc = datetime.now(pytz.timezone('America/Bogota')).replace(microsecond=0)
+            idSolicitud = request.data['solicitud']
+
+            usuarioLogueado = request.user.username
+
+            solicitud = SolicitudAprobacion.object.get(id=idSolicitud)
+
+            idTarjeta = solicitud.tarjeta
+
+            titulo = solicitud.nuevoTitulo
+            contenido = solicitud.nuevoContenido
+
+            ultimaModificacion = now_utc.strftime("%Y-%m-%d %H:%M:%S")
+
+            try:
+                tarjeta = Tarjeta.objects.get(id=idTarjeta)
+                propietario = tarjeta.tablero.propietario.username
+
+                if usuarioLogueado == propietario:
+                    tarjeta.titulo = titulo
+                    tarjeta.contenido = contenido
+                    tarjeta.ultimaModificacion = ultimaModificacion
+                    tarjeta.save()
+                return Resp.send_response(_status=200, _msg='Solicitud aceptada')
+
+            except:
+                return Resp.send_response(_status=503, _msg='La tarjeta no existe')
+
+
+        except Exception as e:
+            print(e)
+            return Resp.send_response(_status=503, _msg='No se puede actualizar la tarjeta')
+
+
+class ListarSolicitudes(APIView):
+    authentication_classes = (SessionAuthentication, BasicAuthentication, authentication.TokenAuthentication,)
+
+    def get(self, request, format=None):
+
+        try:
+            now_utc = datetime.now(pytz.timezone('America/Bogota')).replace(microsecond=0)
+            usuarioLogueado = request.user.username
+            usuario = Usuario.objects.get(username=usuarioLogueado)
+
+            solicitudes = SolicitudAprobacion.objects.filter(tarjeta__tablero__propietario=usuario)
+
+            print(tablero)
+            print(tarjetas)
+            print(solicitudes)
+
+            return Resp.send_response(_status=200, _msg='OK')
+
+        except Exception as e:
+            print(e)
+            return Resp.send_response(_status=503, _msg='No se puede listar las solicitudes')
+
