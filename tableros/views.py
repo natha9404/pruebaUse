@@ -50,13 +50,12 @@ class CrearTarjeta(APIView):
     authentication_classes = (SessionAuthentication, BasicAuthentication, authentication.TokenAuthentication,)
 
     def post(self, request, format=None):
-        jsonTarjeta = request.data['crearTarjeta']
 
         try:
             now_utc = datetime.now(pytz.timezone('America/Bogota')).replace(microsecond=0)
-            titulo = jsonTarjeta['titulo']
-            idTablero = jsonTarjeta['idTablero']
-            contenido = jsonTarjeta['contenido']
+            titulo = request.data['titulo']
+            idTablero = request.data['idTablero']
+            contenido = request.data['contenido']
             ultimaModificacion = now_utc.strftime("%Y-%m-%d %H:%M:%S")
 
             username = request.user.username
