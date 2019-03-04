@@ -29,3 +29,4 @@ class SolicitudAprobacion(models.Model):
     nuevoContenido = models.TextField()
     fechaModificacion = models.DateTimeField(auto_now_add=False, default=False, editable=False)
     usuarioSolicitud = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    estado = models.CharField(max_length=100, default='PENDIENTE')
