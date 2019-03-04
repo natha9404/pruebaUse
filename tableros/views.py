@@ -25,11 +25,10 @@ class CrearTablero(APIView):
         return super(CrearTablero, self).dispatch(request, *args, **kwargs)
 
     def post(self, request):
-        jsonTablero = request.data['crearTablero']
 
         try:
-            nombreTablero = jsonTablero['nombreTablero']
-            estado = jsonTablero['estado']
+            nombreTablero = request.data['nombreTablero']
+            estado = request.data['estado']
 
             username = request.user.username
             usuario = Usuario.objects.get(username=username)
