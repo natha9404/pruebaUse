@@ -22,3 +22,13 @@ class TarjetaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tarjeta
         fields = '__all__'
+
+
+class SolicitudSerializer(serializers.ModelSerializer):
+    tarjeta = TarjetaSerializer(read_only=True)
+    usuarioSolicitud = UsuarioSerializer(read_only=True)
+
+
+    class Meta:
+        model = SolicitudAprobacion
+        fields = '__all__'
