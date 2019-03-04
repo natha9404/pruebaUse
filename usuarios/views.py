@@ -10,6 +10,10 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework import permissions, authentication
+import json
+from .serializer import UsuarioSerializer
 from rest_framework.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND,
@@ -46,7 +50,7 @@ class login(APIView):
                             status=HTTP_200_OK)
         except Exception as e:
             print(3, 'Error, no se puede realizar login' + str(e))
-            return Resp.send_response(_status=503, _msg=ErrorMSG.get_msg(5003))
+            return Resp.send_response(_status=503, _msg=ErrorMSG.get_msg(5003), _data=e)
 
 
 class createUser(APIView):
@@ -89,7 +93,6 @@ class createUser(APIView):
             return Resp.send_response(_status=503, _msg=ErrorMSG.get_msg(5003))
 
 
-
 class logout(APIView):
     permission_classes = (permissions.AllowAny,)
 
@@ -108,3 +111,19 @@ def sample_api(request):
     username = request.user.username
     data = {'sample_data': 123, 'usuario': username}
     return Response(data, status=HTTP_200_OK)
+
+
+class ObtenerUsuario(APIView):
+    authentication_classes = (SessionAuthentication, BasicAuthentication, authentication.TokenAuthentication,)
+
+    def get(self, request, format=None):
+        try:
+            username = request.user.username
+            usuario = Usuario.objects.get(username=username)
+            serializado = UsuarioSerializer(usuario)
+            print('hOLAA')
+
+            return Resp.send_response(_status=200, _msg='OK', _data=serializado.data)
+        except Exception as e:
+            print(e)
+            return Resp.send_response(_status=503, _msg=ErrorMSG.get_msg(5003))
